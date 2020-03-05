@@ -84,9 +84,6 @@ local function advance()
     -- Advance the iterator
     lexer_out_s, lexer_out_c = iter(state, lexer_out_s)
 
-    print(lexer_out_s)
-    print(lexer_out_c)
-
     -- If we're not past the end, copy current lexeme into vars
     if lexer_out_s ~= nil then
         lexstr, lexcat = lexer_out_s, lexer_out_c
@@ -244,7 +241,6 @@ function parse_statement()
         ast2 = { PRINT_STMT, ast1 }
 
         while matchString(",") do
-            print("found , ")
             good, ast1 = parse_print_arg()
             if not good then
                 return false, nil
@@ -260,10 +256,49 @@ function parse_statement()
         return true, ast2
 
     elseif matchString("func") then
-        
-        return
+        local funcName = lexstr 
+
+        -- identifier 
+        if lexcat == lexit.ID then 
+            funcName = lexstr 
+            advance() 
+            
+        else
+            return false, nil 
+        end 
+
+        -- start of parentheses 
+        if not matchString("(") then 
+            return false, nil 
+        end 
+
+        -- parse the args 
+
+
+        -- end of args 
+        if not matchString(")") then 
+            return false, nil 
+        end 
+
+
+
+        -- parse the function statement 
+        good, ast1 = parse_stmt_list()
+        if not good then 
+            return false, nil 
+        end 
+
+        ast2 = { FUNC_DEF, funcName, ast1 }
+
+        -- end of the function 
+        if matchString("end") then
+            return true, ast2 
+        end 
+
+        return false, nil
     -- we have an identifier
     elseif lexcat == lexit.ID then 
+        local id = lexstr 
         advance() -- go to next lexeme
         if matchString("=") then -- check for assignment statement
             if lexcat == lexit.DIGIT then 
@@ -271,6 +306,36 @@ function parse_statement()
             else
                 return false, nil 
             end 
+        elseif matchString("(") then 
+            -- we have a function 
+
+            --Simple function, no args 
+            if matchString(")") then 
+                return true, { FUNC_CALL, id }
+            end 
+
+            --Handle Args 
+            good, ast1 = parse_factor()
+            if not good then 
+                return false, nil 
+            end 
+            ast2 = { FUNC_CALL, id, ast1}
+
+            while matchString(",") do
+                good, ast1 = parse_factor()
+                if not good then
+                    return false, nil
+                end
+
+                table.insert(ast2, ast1)
+            end
+
+            -- Ending ) 
+            if not matchString(")") then
+                return false, nil
+            end
+
+            return true, ast2 
         else 
             return false, nil 
         end 
@@ -306,16 +371,17 @@ end
 
 function parse_factor()
   local good, ast
-  
-  return good, ast
-end
+
+  if lexcat == lexit.DIGIT then 
+    ast = { NUMLIT_VAL, lexstr }
+    return true, ast
+  end 
+  return false, nil 
+end 
 
 function parse_print_arg()
   local good, ast
 
-  print(lexstr)
-  print(lexcat)
-  print(lexit.STRLIT)
   if lexcat == lexit.STRLIT then 
     ast = { STRLIT_OUT, lexstr }
     advance() 
