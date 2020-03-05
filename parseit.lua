@@ -272,15 +272,10 @@ function parse_statement()
             return false, nil 
         end 
 
-        -- parse the args 
-
-
         -- end of args 
         if not matchString(")") then 
             return false, nil 
         end 
-
-
 
         -- parse the function statement 
         good, ast1 = parse_stmt_list()
