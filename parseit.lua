@@ -244,6 +244,7 @@ function parse_statement()
         ast2 = { PRINT_STMT, ast1 }
 
         while matchString(",") do
+            print("found , ")
             good, ast1 = parse_print_arg()
             if not good then
                 return false, nil
@@ -311,6 +312,15 @@ end
 
 function parse_print_arg()
   local good, ast
+
+  print(lexstr)
+  print(lexcat)
+  print(lexit.STRLIT)
+  if lexcat == lexit.STRLIT then 
+    ast = { STRLIT_OUT, lexstr }
+    advance() 
+    return true, ast 
+  end 
   
   return good, ast
 end
